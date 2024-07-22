@@ -3,42 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unlearning Paper</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Data Attribution-Guided Machine Unlearning</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        h2 {
+            color: #34495e;
+        }
+        .authors {
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        .abstract {
+            background-color: #f2f2f2;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        figure {
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1>Unlearning: Techniques and Applications</h1>
+        <h1>Machine Unlearning via Simulated Oracle Matching</h1>
+        <p class="authors">Authors: Kristian Georgiev, Sung Min Park, Roy Rinberg, Shivam Garg, Andrew Ilyas, Aleksander Madry, Seth Neel</p>
     </header>
+
+    <section class="abstract">
+        <h2>Abstract</h2>
+        <p>
+            Despite increasing interest in machine unlearning, recent work shows that under strong evaluations,
+            existing techniques largely fail to unlearn in non-convex settings. In this paper, we introduce a new
+            technique for machine unlearning in such settings. Key to our method is a reduction from the problem of
+            machine unlearning to that of data attribution. In particular, we show theoretically (in an underdetermined
+            regression setting) and empirically (in a standard deep learning setting) that given access to the outputs of a
+            perfectly unlearned model (i.e., a model trained from scratch on the non-unlearned data), we can quickly
+            fine-tune an existing model on these predictions and match the target model predictions out-of-sample.
+            Meanwhile, predicting such “oracle” outputs is precisely the goal of a recent line of work in data attribution
+            called datamodeling. Combining these two insights yields an end-to-end unlearning algorithm in which one
+            first predicts the output of a model re-trained from scratch, then fine-tunes an existing model to match these
+            predicted outputs. Across different types and sizes of forget sets on standard classification tasks, we show
+            that this two-stage algorithm results in strong unlearning performance being close to indistinguishable
+            from the fully-retrained “oracle” model in some cases. As an added benefit, our reduction means that future
+            improvements to data attribution—whether in accuracy or efficiency—may in turn yield better unlearning
+            algorithms
+        </p>
+    </section>
+
     <main>
         <section>
-            <h2>Abstract</h2>
-            <p>Insert the abstract of your paper here.</p>
+            <h2>1. Introduction</h2>
+            <p>
+                Initially motivated by privacy considerations such as the GDPR's "Right to be Forgotten," machine unlearning seeks to address the challenge of removing the influence of (or "forgetting") selected datapoints from an existing model.
+            </p>
+            <figure>
+                <img src="path/to/your/figure1.png" alt="High-level description of Machine Unlearning">
+                <figcaption>Figure 1: High-level description of Machine Unlearning.</figcaption>
+            </figure>
         </section>
+
         <section>
-            <h2>Introduction</h2>
-            <p>Insert the introduction of your paper here.</p>
+            <h2>2. Unlearning through Data Attribution</h2>
+            <p>
+                We seek to side-step the problems that arise in the prior heuristic-based machine unlearning methods, by investigating what an optimal unlearner would do given access to predictions of a model retrained from scratch on the retain set.
+            </p>
+            <figure>
+                <img src="path/to/your/figure2.png" alt="Data attribution based unlearning methods">
+                <figcaption>Figure 2: Data attribution based unlearning methods significantly outperform prior unlearning methods.</figcaption>
+            </figure>
         </section>
+
         <section>
-            <h2>Methods</h2>
-            <p>Describe the methods used in your paper here.</p>
+            <h2>3. Conclusion and discussion</h2>
+            <p>
+                We show that leveraging data attribution methods offers a fruitful direction for machine unlearning. By leveraging estimates of predictions of the (counterfactual) retrained model, we can sidestep the issue of unknown stopping conditions of prior gradient-based approaches.
+            </p>
         </section>
-        <section>
-            <h2>Results</h2>
-            <p>Present the results of your research here.</p>
-        </section>
-        <section>
-            <h2>Conclusion</h2>
-            <p>Summarize the conclusions of your paper here.</p>
-        </section>
+
         <section>
             <h2>References</h2>
-            <p>List the references used in your paper here.</p>
+            <ul>
+                <li>Engstrom, L., Feldmann, A., and Madry, A. Dsdm: Model-aware dataset selection with datamodels, 2024.</li>
+                <li>Ginart, A., Guan, M. Y., Valiant, G., and Zou, J. Making ai forget you: Data deletion in machine learning. In Proceedings of the 33rd Conference on Neural Information Processing Systems (NeurIPS 2019), 2019.</li>
+                <!-- Add more references as needed -->
+            </ul>
         </section>
     </main>
+
     <footer>
-        <p>&copy; 2024 Your Name. All rights reserved.</p>
+        <p>&copy; 2024 [Your Names]. All rights reserved.</p>
     </footer>
 </body>
 </html>
-
