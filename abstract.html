@@ -1,0 +1,18 @@
+<h2>Abstract</h2>
+<p>
+    Despite increasing interest in machine unlearning, recent work shows that under strong evaluations,
+    existing techniques largely fail to unlearn in non-convex settings. In this paper, we introduce a new
+    technique for machine unlearning in such settings. Key to our method is a reduction from the problem of
+    machine unlearning to that of data attribution. In particular, we show theoretically (in an underdetermined
+    regression setting) and empirically (in a standard deep learning setting) that given access to the outputs of a
+    perfectly unlearned model (i.e., a model trained from scratch on the non-unlearned data), we can quickly
+    fine-tune an existing model on these predictions and match the target model predictions out-of-sample.
+    Meanwhile, predicting such “oracle” outputs is precisely the goal of a recent line of work in data attribution
+    called datamodeling. Combining these two insights yields an end-to-end unlearning algorithm in which one
+    first predicts the output of a model re-trained from scratch, then fine-tunes an existing model to match these
+    predicted outputs. Across different types and sizes of forget sets on standard classification tasks, we show
+    that this two-stage algorithm results in strong unlearning performance being close to indistinguishable
+    from the fully-retrained “oracle” model in some cases. As an added benefit, our reduction means that future
+    improvements to data attribution—whether in accuracy or efficiency—may in turn yield better unlearning
+    algorithms
+</p>
