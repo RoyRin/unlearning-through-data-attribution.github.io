@@ -48,7 +48,6 @@
                 
             <a href="https://kristian-georgiev.github.io">Kristian Georgiev</a>, <a href="http://sungminpark.com">Sung Min Park</a>,
             <a href="https://royrinberg.com">Roy Rinberg</a>,
-            <br>
              <a href="https://cs.stanford.edu/people/shivamg/">Shivam Garg</a>, <a href="https://andrewilyas.com">Andrew Ilyas</a>, <a href="http://madry.mit.edu">Aleksander Madry</a>, <a href="https://sethneel.com">Seth Neel</a>
 
         </p>
@@ -86,21 +85,58 @@
 
 
     <section>
+
+        
         <h2>Introduction</h2> 
-        <!-- How to do citation: <sup><a href="#ref1">2</a></sup> -->
+        
+        
+<p>Initially motivated by privacy considerations such as the GDPR's ``Right to be Forgotten,'' machine unlearning seeks to address the challenge of removing the influence of (or ``forgetting'') selected datapoints from an existing model. Formally, <em>machine unlearning</em> takes as an input a model $\theta$ trained on a training dataset $S$ and a forget set $S_f \subset S$, and returns a new model that is similar to the model $\theta_r$ retrained on the dataset excluding the <em>forget set</em>, $S_r = S / S_f$. While one obvious solution would be to exclude $S_f$ from the training dataset, and then to retrain $\theta$ from scratch on the <em>retain set</em> $S_r = S / S_f$, as model and dataset sizes continue to increase, this becomes increasingly infeasible. Approximate machine unlearning <cite>ginart2019making, guo2019certified, sekhari2021remember, neel2021deletion</cite> tries to approximate this re-training behavior with far less computation than required for re-training. Broadly, unlearning is considered successful if the behavior of the unlearned model closely approximates the behaviour of $\theta_r$.</p>
 
-        <p>The goal of machine <em>unlearning</em> is to remove (or "unlearn") the impact of a specific collection of training examples from a trained machine learning model. Recent interest in machine unlearning arguably began with privacy-focused initiatives such as the GDPR's <em>Right to be Forgotten</em>, which asks companies to comply with "data deletion requests" from their users 
-            <sup><a href="#ginart2019making">cite</a> </sup>
-            --- upon receiving a request, the company's goal is to change their AI models to be as if they had never seen the relevant user's data. Since GDPR, unlearning has found a variety of applications outside of privacy. These include, for example, removing the effect of toxic, outdated, or poisoned data 
-            <sup><a href="#pawelczyk2024machineunlearningfailsremove">cite</a>  </sup> 
-            <sup><a href="#goel2024correctivemachineunlearning">cite</a> </sup>,; rectifying copyright infringement 
-            <sup><a href="#liu2024unlearning">cite</a>  </sup> 
-            ; or aligning language models 
-            <sup><a href="#li2024wmdpbenchmarkmeasuringreducing">cite</a>  </sup>.</p>
+<p>While above is the general technical notion we will focus on, we note that it remains an open question how to bridge laws, such as GDPR and national copyright laws, to technical notions of machine unlearning---<em>what technical measure satisfies the legal definition of being ``forgotten''</em>.</p>
 
-        <p>The relevance of machine unlearning has prompted a growing line of research on technical solutions in the form of <em>unlearning algorithms</em>. An unlearning algorithm takes as input a model &theta; trained on a dataset S and a "forget set" S<sub>F</sub> &sub; S, and outputs a model &theta;' that "looks like" it was trained on the so-called "retain set" S<sub>R</sub> := S &minus; S<sub>F</sub>. Of course, one valid unlearning algorithm simply throws away the original model &theta;, and retrains a new model &theta;' from scratch on the retain set S<sub>R</sub>. This algorithm clearly succeeds at the task of unlearning, since the generated &theta;' really <em>is</em> trained on the retain set. As model and dataset sizes continue to increase, however, this approach becomes an increasingly costly proposition. Thus, most work on unlearning seeks to approximate this naive algorithm while imposing a lower computational burden.</p>
-    
-        <h2>Existing Data</h2> 
+<figure>
+    <img src="assets/figs/unlearning-diagram.jpg" alt="High-level description of Machine Unlearning">
+    <figcaption>High-level description of Machine Unlearning.</figcaption>
+</figure>
+
+<h3>Evaluating Unlearning: KL divergence of Margins</h3>
+
+<p>We consider an unlearning method is successful if at any given input <em>x</em>, the outputs of the unlearned model <em>θ<sub>u</sub></em> and the oracle model <em>θ<sub>r</sub></em> are statistically indistinguishable. To contextualize the performance of different unlearning methods, we introduce a new measure called the KL divergence of Margins (<span style="font-variant: small-caps;">klom</span>), which builds on an existing measure, ULIRA. Specifically, for each data point <em>x</em> of interest, <span style="font-variant: small-caps;">klom</span> computes the KL-divergence between the predictions of unlearned models and the predictions of the retrained models (that never saw <em>S<sub>f</sub></em>); a smaller value means that the predictions are more similar, e.g., that unlearning was more successful.</p>
+
+<p> 
+We discuss this in full-length at the bottom of this article, and in the paper.
+
+</p>
+
+<h3>Existing Unlearning Methods</h3>
+
+<p>Nearly all existing methods employ some variation of performing gradient descent on the retain set, gradient ascent on the forget set, or freezing a subset of the network before retraining on the retain set. Unfortunately, even the best of these methods do not approximate a retrained model very well, particularly when unlearning success is evaluated on a per-point basis (see <span style="font-variant: small-caps;">klom</span> evaluations in Figure 2). <a href="https://arxiv.org/abs/2403.01218">Existing work</a> posits that this is because different points are unlearned at different rates, and there is no obvious way to know when a point is unlearned. Thus, even if an unlearning algorithm is making the updates in the right direction, the final model can under or ``over-unlearn'' individual datapoints, resulting in unsuccessful unlearning and even higher privacy leakage.</p>
+
+<h2>Unlearning through Data Attribution</h2>
+
+<p>We seek to side-step the problems that arise in the prior heuristic-based machine unlearning methods, by investigating what an <em>optimal</em> unlearner would do given access to <em>predictions</em> of a model retrained from scratch on the retain set. While access to a retrained model would defeat the purpose of unlearning (as you already have an unlearned model), it provides an informative thought experiment. We propose a method called <em>Oracle-Matching</em> (<span style="font-variant: small-caps;">om</span>), which finetunes the original model on the predictions of a full retrained model. Our results for <span style="font-variant: small-caps;">om</span> (Figure 2) show that with sample-access to re-trained models, we can unlearn much better than using other gradient-based methods. Note that <span style="font-variant: small-caps;">om</span> does not actually require access to the retrained models themselves, just their predictions on $\{x_i\}$.</p>
+
+<p>While access to a retrained model is an unreasonable requirement, we observe that recent data attribution methods <cite>datamodels, TRAK</cite> can approximate counterfactual predictions of the retrained model. In particular, <em>datamodels</em> accurately predict a model's prediction on a test point $x$ as a function of the training dataset $S' \subset S$ <cite>datamodels</cite>. We first find that a sufficiently accurate datamodel can be used to approximate an unlearned model's predictions directly by removing the influence of the forgotten points, which we call <em>Datamodel-Direct</em>. Next, leveraging datamodels, we implement an approximate (and practical) version of Oracle-Matching, which we call <em>Datamodel-Matching</em>. We find that <em>Datamodel-Matching</em> achieves levels of unlearning similar to that of fully retraining the model (as measured by <span style="font-variant: small-caps;">klom</span> scores), while using significantly less compute (Figure 2). Importantly, using datamodels allow us to recover the performance of <span style="font-variant: small-caps;">om</span>, and outperforms all prior gradient-based approaches.</p>
+
+
+<figure>
+    <img src="assets/figs/headline_plot_pareto__99__20240711-0152.pdf" alt="Data attribution based unlearning methods">
+    <figcaption><strong>Data attribution based unlearning methods significantly outperform prior unlearning methods.</strong><br>
+    We compare the performance of different unlearning algorithms for ResNet-9 classifiers trained on CIFAR-10 in terms of computational cost (x-axis) and unlearning effectiveness (y-axis; measured by <span style="font-variant: small-caps;">klom</span>). For each unlearning method (for a given budget), we evaluate the 99th percentile of <span style="font-variant: small-caps;">klom</span> values over points in each of the Forget Set, Validation set, and Retain set, and report the average. We evaluate on 2 forget sets, forget set 3 (1000 random points), and forget set 6 (500 "coherent" points), described in the full paper.
+    </figcaption>
+</figure>
+
+<h3>Unlearning for Linear Models</h3>
+
+<p>To understand the effectiveness of Oracle-Matching, we compare it to other gradient-based unlearning methods for a simple linear model. In our model, data are generated from a Gaussian distribution and we fit the data by minimizing the least squares objective with $\ell_2$ regularization.</p>
+
+<p>Since the objective function is convex, both gradient descent (<span style="font-variant: small-caps;">gd</span>) and oracle matching (<span style="font-variant: small-caps;">om</span>) are guaranteed to converge, but <span style="font-variant: small-caps;">om</span> converges significantly faster. <span style="font-variant: small-caps;">om</span> differs from <span style="font-variant: small-caps;">gd</span> in two key aspects: (i) it minimizes the squared error relative to the optimal model predictions and (ii) its updates include both the forget set and the retain set points. To isolate the impact of these differences, we consider <span style="font-variant: small-caps;">om</span> with only the retained points (<span style="font-variant: small-caps;">om</span> retain set), which shows negligible progress. This suggests that including forget set points in the updates is crucial for <span style="font-variant: small-caps;">om</span>'s superior performance. Gradient descent on the retain set and gradient ascent on the forget set (<span style="font-variant: small-caps;">gd</span> + <span style="font-variant: small-caps;">ga</span>) also uses forget set points but in a heuristic manner, failing to reach the optimum. To corroborate the above empirical observations, we also present theoretical analysis.</p>
+
+<figure>
+    <img src="assets/figs/linear_model/stochastic_isotropic_with_legend.pdf" alt="Oracle Matching converges faster than other methods for unlearning with a linear model">
+    <figcaption><strong>Oracle Matching converges faster than other methods for unlearning with a linear model.</strong> We generate 100 datapoints from an isotropic Gaussian distribution in 400 dimensions and label them with a noisy linear function, and attempt to unlearn a random subset of 5 training points.</figcaption>
+</figure>
+
 
 <!--
         <p><strong>Current approaches to unlearning.</strong> For simple (e.g., convex or linear) models, there are fast unlearning algorithms that also enjoy provable guarantees. These methods fall into two classes: fine-tuning the existing model using gradient-based approaches <cite>kurmanji2023towards, neel2021deletion, graves2021amnesiac</cite>, or exploiting specific properties of the model <cite>approximate_data_deletion, mahadevan2021certifiablemachineunlearninglinear, suriyakumar2022algorithms</cite>. In larger neural networks (where efficient unlearning is arguably most relevant, given the cost of training from scratch), the situation is considerably murkier. The only methods that obtain provable guarantees tend to come with significant degradation in accuracy <cite>sisa, li2022largelanguagemodelsstrong</cite>.</p>
@@ -136,10 +172,16 @@
     <!-- Preliminaries-->
 
     <!-- MEASURES OF UNLEARNING-->
+    <h3>Conclusion and Discussion</h3>
 
+    <p>We show that leveraging data attribution methods offers a fruitful direction for machine unlearning. By leveraging estimates of predictions of the (counterfactual) retrained model, we can sidestep the issue of unknown stopping conditions of prior gradient-based approaches. Our unlearning algorithms significantly outperform others in terms of both effectiveness and computational time (Figure 2). In a linear setting, we show that oracle matching can converge much faster than <span style="font-variant: small-caps;">gd</span>/<span style="font-variant: small-caps;">ga</span> based methods (Figure 3). Further, we propose <span style="font-variant: small-caps;">klom</span>, a measure for estimating unlearning success.</p>
+    
+    <p>By reducing the problem of unlearning to data attribution, we can take advantage of recent and future work in attribution to improve the fidelity and efficiency of unlearning. So far, our methods rely on datamodels, which requires expensive pre-computation. One promising future direction is to investigate other more efficient data attribution methods, such as TRAK. More broadly, our work shows the potential of practical and reliable approximate unlearning methods by better understanding how data influences model outputs.</p>
 
+    
+    <hr>
     <section>
-        <h2>An Improved Evaluation Metric: KLOM</h2>
+        <h3>An Improved Evaluation Metric: KLOM</h3>
         <p>In this section, we propose the <em>KL divergence of margins</em> or <strong>KLOM</strong> as an improved way to empirically measure unlearning. 
         <strong>KLOM</strong> improves over <strong>ULIRA</strong> in three key ways: (i) it is conceptually simpler in that it directly approximates Definition 1 (ii) it is simpler to implement resulting in more consistency across papers and (iii) most importantly, it is not susceptible to gaming by "catastrophic unlearning," as we discuss below.</p>
 
@@ -175,42 +217,16 @@
         
     </section>
 
+    <section>
+        <h2>References</h2>
+        <em>References in progress. See 2 page abstract for reference list. <a href="https://royrinberg.com//assets/projects/papers/Unlearning_through_Data_Attribution.pdf">Link to 2 page Abstract</a>. </em>
 
+
+    </section>
     <!-- Oracle Matching -->
     <!-- Datamodels Matching -->
 
-
-    <!-- <main>
-        <section>
-            <h2>1. Introduction</h2>
-            <p>
-                Initially motivated by privacy considerations such as the GDPR's "Right to be Forgotten," machine unlearning seeks to address the challenge of removing the influence of (or "forgetting") selected datapoints from an existing model.
-            </p>
-            <figure>
-                <img src="assets/figs/9__headline_plot_pareto__99__20240521-1710.pdf" alt="High-level description of Machine Unlearning">
-                <figcaption>Figure 1: High-level description of Machine Unlearning.</figcaption>
-            </figure>
-        </section>
-
-        <section>
-            <h2>2. Unlearning through Data Attribution</h2>
-            <p>
-                We seek to side-step the problems that arise in the prior heuristic-based machine unlearning methods, by investigating what an optimal unlearner would do given access to predictions of a model retrained from scratch on the retain set.
-            </p>
-            <figure>
-                <img src="path/to/your/figure2.png" alt="Data attribution based unlearning methods">
-                <figcaption>Figure 2: Data attribution based unlearning methods significantly outperform prior unlearning methods.</figcaption>
-            </figure>
-        </section>
-
-        <section>
-            <h2>3. Conclusion and discussion</h2>
-            <p>
-                We show that leveraging data attribution methods offers a fruitful direction for machine unlearning. By leveraging estimates of predictions of the (counterfactual) retrained model, we can sidestep the issue of unknown stopping conditions of prior gradient-based approaches.
-            </p>
-        </section>
-        
-    -->
+        <!--
         <section>
             <h2>References</h2>
             <ol>
@@ -361,6 +377,7 @@
                                 
             </ol>
         </section> 
+        -->
         
     </main>
 
